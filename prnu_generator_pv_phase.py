@@ -8,7 +8,9 @@ Created on Mon Nov 27 13:48:51 2023
 -Level 1 data is used for analysis here.
 -Bias correction is not used here.
 -4LED Files are segregated based on image headers
--Last modified: 2023-11-28
+-Last modified:
+    2023-11-28
+    2023-12-18: Added write fits option.
 
 @author: janmejoy
 """
@@ -36,7 +38,7 @@ def flat_generator(filelist, kernel, name):
     #Based on previous study, kernel size of 11x11 px is used for boxcar blurring in 'blur' function.
     
     #Data visualization only.
-    plt.figure(name, figsize=(10, 5))
+    plt.figure(name, figsize=(8, 5))
     plt.subplot(1,2,1)
     plt.imshow(stacked_led_img)
     plt.colorbar()
@@ -90,22 +92,57 @@ for file in filelist:
         print (ledstat, fits.open(file)[0].header['FW1POS'], file)
         aa_355.append(file)
    
-
+################## 355 ###################
 name='prnu_355_ff'
 filelist= ff_355
 croprow, cropcol= 2000, 1500
 
 prnu= flat_generator(filelist, 11, str(filelist))
+fits.writeto("/home/janmejoy/Documents/"+name+".fits", prnu)
+print("\n",name)
 single=fits.open(filelist[1])[0].data
 corrected= single/prnu
 calib_stats(single, corrected, prnu, croprow, cropcol, 25)
 
+name='prnu_355_aa'
+filelist= aa_355
+croprow, cropcol= 2000, 1500
 
+prnu= flat_generator(filelist, 11, str(filelist))
+fits.writeto("/home/janmejoy/Documents/"+name+".fits", prnu)
+print("\n",name)
+single=fits.open(filelist[1])[0].data
+corrected= single/prnu
+calib_stats(single, corrected, prnu, croprow, cropcol, 25)
+
+################## 255 ###################
 name='prnu_255_aa'
 filelist= aa_255
 croprow, cropcol= 3700, 2000
 
 prnu= flat_generator(filelist, 13, str(filelist))
+fits.writeto("/home/janmejoy/Documents/"+name+".fits", prnu)
+print("\n",name)
 single=fits.open(filelist[1])[0].data
 corrected= single/prnu
 calib_stats(single, corrected, prnu, croprow, cropcol, 25)
+
+
+name='prnu_255_ff'
+filelist= ff_255
+croprow, cropcol= 3700, 2000
+
+prnu= flat_generator(filelist, 13, str(filelist))
+fits.writeto("/home/janmejoy/Documents/"+name+".fits", prnu)
+print("\n",name)
+single=fits.open(filelist[1])[0].data
+corrected= single/prnu
+calib_stats(single, corrected, prnu, croprow, cropcol, 25)
+
+################ test ####################
+exported= glob.glob("/home/janmejoy/Documents/prnu*")
+for i in exported:
+    plt.figure()
+    plt.imshow(fits.open(i)[0].data, vmin=0.97, vmax=1.03)
+    plt.colorbar()
+    plt.title(i)
