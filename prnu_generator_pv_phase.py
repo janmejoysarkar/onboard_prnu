@@ -11,6 +11,9 @@ Created on Mon Nov 27 13:48:51 2023
 -Last modified:
     2023-11-28
     2023-12-18: Added write fits option.
+    2024-02-21: Added single point user defined entry for save location 
+    and kernel size.
+    Added minor comments. Made dustmap with 25 px kernel.
 
 @author: janmejoy
 """
@@ -71,78 +74,88 @@ def calib_stats(single, corrected, prnu, croprow, cropcol, size):
     print("Upon good FF correction, [2] and [4] should match well")
 
 
-
-os.chdir('/home/janmejoy/SUIT_data/level1fits_subset')
-filelist= glob.glob("SUT*/*")
-aa_255, ff_255=[], []
-aa_355, ff_355=[], []
-
-for file in filelist:
-    ledstat=fits.open(file)[0].header['LEDONOFF']
-    if (ledstat=='55'):
-        print (ledstat, fits.open(file)[0].header['FW1POS'], file)
-        ff_255.append(file)
-    elif(ledstat=='aa'):
-        print (ledstat, fits.open(file)[0].header['FW1POS'], file)
-        aa_255.append(file)
-    elif(ledstat=='5500'):
-        print (ledstat, fits.open(file)[0].header['FW1POS'], file)
-        ff_355.append(file)
-    elif(ledstat=='aa00'):
-        print (ledstat, fits.open(file)[0].header['FW1POS'], file)
-        aa_355.append(file)
-   
-################## 355 ###################
-name='prnu_355_ff'
-filelist= ff_355
-croprow, cropcol= 2000, 1500
-
-prnu= flat_generator(filelist, 11, str(filelist))
-fits.writeto("/home/janmejoy/Documents/"+name+".fits", prnu)
-print("\n",name)
-single=fits.open(filelist[1])[0].data
-corrected= single/prnu
-calib_stats(single, corrected, prnu, croprow, cropcol, 25)
-
-name='prnu_355_aa'
-filelist= aa_355
-croprow, cropcol= 2000, 1500
-
-prnu= flat_generator(filelist, 11, str(filelist))
-fits.writeto("/home/janmejoy/Documents/"+name+".fits", prnu)
-print("\n",name)
-single=fits.open(filelist[1])[0].data
-corrected= single/prnu
-calib_stats(single, corrected, prnu, croprow, cropcol, 25)
-
-################## 255 ###################
-name='prnu_255_aa'
-filelist= aa_255
-croprow, cropcol= 3700, 2000
-
-prnu= flat_generator(filelist, 13, str(filelist))
-fits.writeto("/home/janmejoy/Documents/"+name+".fits", prnu)
-print("\n",name)
-single=fits.open(filelist[1])[0].data
-corrected= single/prnu
-calib_stats(single, corrected, prnu, croprow, cropcol, 25)
-
-
-name='prnu_255_ff'
-filelist= ff_255
-croprow, cropcol= 3700, 2000
-
-prnu= flat_generator(filelist, 13, str(filelist))
-fits.writeto("/home/janmejoy/Documents/"+name+".fits", prnu)
-print("\n",name)
-single=fits.open(filelist[1])[0].data
-corrected= single/prnu
-calib_stats(single, corrected, prnu, croprow, cropcol, 25)
-
-################ test ####################
-exported= glob.glob("/home/janmejoy/Documents/prnu*")
-for i in exported:
-    plt.figure()
-    plt.imshow(fits.open(i)[0].data, vmin=0.97, vmax=1.03)
-    plt.colorbar()
-    plt.title(i)
+if __name__=='__main__':
+    
+    #data used from SUIT server at janmejoy@192.168.11.226:SUIT_data/level1fits_subset. 
+    #Mounted by SSHFS on local machine.
+    
+    os.chdir('/home/janmejoyarch/janmejoy_suit_server/SUIT_data/level1fits_subset') 
+    filelist= glob.glob("SUT*/*")
+    kernel_355= 11 #default is 11 for PRNU
+    kernel_255= 13 # default is 13 for PRNU
+    sav= '/home/janmejoyarch/Desktop/dust_map/'
+    
+    aa_255, ff_255=[], [] #aa and ff represent different sets of 4 LEDs.
+    aa_355, ff_355=[], []
+    
+    for file in filelist: #segregating files based on LEDONOFF ID
+        ledstat=fits.open(file)[0].header['LEDONOFF']
+        if (ledstat=='55'):
+            print (ledstat, fits.open(file)[0].header['FW1POS'], file)
+            ff_255.append(file)
+        elif(ledstat=='aa'):
+            print (ledstat, fits.open(file)[0].header['FW1POS'], file)
+            aa_255.append(file)
+        elif(ledstat=='5500'):
+            print (ledstat, fits.open(file)[0].header['FW1POS'], file)
+            ff_355.append(file)
+        elif(ledstat=='aa00'):
+            print (ledstat, fits.open(file)[0].header['FW1POS'], file)
+            aa_355.append(file)
+       
+    ################## 355 ###################
+    print("\n Kernel Size_355 nm", kernel_355)
+    name='prnu_355_ff'
+    filelist= ff_355
+    croprow, cropcol= 2000, 1500
+    
+    prnu= flat_generator(filelist, kernel_355, str(filelist))
+    fits.writeto(sav+name+".fits", prnu)
+    print("\n",name)
+    single=fits.open(filelist[1])[0].data
+    corrected= single/prnu
+    calib_stats(single, corrected, prnu, croprow, cropcol, 25)
+    
+    name='prnu_355_aa'
+    filelist= aa_355
+    croprow, cropcol= 2000, 1500
+    
+    prnu= flat_generator(filelist, kernel_355, str(filelist))
+    fits.writeto(sav+name+".fits", prnu)
+    print("\n",name)
+    single=fits.open(filelist[1])[0].data
+    corrected= single/prnu
+    calib_stats(single, corrected, prnu, croprow, cropcol, 25)
+    
+    ################## 255 ###################
+    print("\n Kernel Size_255 nm", kernel_255)   
+    name='prnu_255_aa'
+    filelist= aa_255
+    croprow, cropcol= 3700, 2000
+    
+    prnu= flat_generator(filelist, kernel_255, str(filelist))
+    fits.writeto(sav+name+".fits", prnu)
+    print("\n",name)
+    single=fits.open(filelist[1])[0].data
+    corrected= single/prnu
+    calib_stats(single, corrected, prnu, croprow, cropcol, 25)
+    
+    
+    name='prnu_255_ff'
+    filelist= ff_255
+    croprow, cropcol= 3700, 2000
+    
+    prnu= flat_generator(filelist, kernel_255, str(filelist))
+    fits.writeto(sav+name+".fits", prnu)
+    print("\n",name)
+    single=fits.open(filelist[1])[0].data
+    corrected= single/prnu
+    calib_stats(single, corrected, prnu, croprow, cropcol, 25)
+    
+    ################ test ####################
+    exported= glob.glob(sav+"prnu*")
+    for i in exported:
+        plt.figure()
+        plt.imshow(fits.open(i)[0].data, vmin=0.97, vmax=1.03)
+        plt.colorbar()
+        plt.title(i)
