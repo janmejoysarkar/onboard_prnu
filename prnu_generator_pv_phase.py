@@ -83,8 +83,8 @@ if __name__=='__main__':
     filelist= glob.glob(project_path+"data/raw/SUT*")
     sav= os.path.join(project_path, 'products/')
     
-    kernel_355= 25 #default is 11 for PRNU
-    kernel_255= 25 # default is 13 for PRNU
+    kernel_355= 11 #default is 11 for PRNU
+    kernel_255= 13 # default is 13 for PRNU
     date= filelist[0][-37:-27] #date of data recording
     
     aa_255, ff_255=[], [] #aa and ff represent different sets of 4 LEDs.
@@ -104,7 +104,7 @@ if __name__=='__main__':
         elif(ledstat=='aa00'):
             print (ledstat, fits.open(file)[0].header['FW1POS'], file)
             aa_355.append(file)
-    '''   
+     
     ################## 355 ###################
     print("\n Kernel Size_355 nm", kernel_355)
     name=date+'_prnu_355_ff'
@@ -126,7 +126,7 @@ if __name__=='__main__':
     single=fits.open(aa_355[1])[0].data
     corrected= single/prnu
     calib_stats(single, corrected, prnu, croprow, cropcol, 25)
-    '''
+    
     ################## 255 ###################
     print("\n Kernel Size_255 nm", kernel_255)   
     name=date+'_prnu_255_aa'
