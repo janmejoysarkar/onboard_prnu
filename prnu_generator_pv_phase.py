@@ -26,6 +26,7 @@ import glob
 from astropy.io import fits
 from astropy.convolution import convolve
 from astropy.convolution import Box2DKernel
+import datetime
 
 def add(filelist):
     data_sum=0
@@ -40,7 +41,8 @@ def flat_generator(filelist, kernel, name):
     stacked_led_img= add(filelist)
     led_flat_field= stacked_led_img/blur(stacked_led_img, kernel) #generates LED flat.
     #Based on previous study, kernel size of 11x11 px is used for boxcar blurring in 'blur' function.
-    
+    return(led_flat_field)
+'''
     #Data visualization only.
     plt.figure(name, figsize=(8, 5))
     plt.subplot(1,2,1)
@@ -52,7 +54,7 @@ def flat_generator(filelist, kernel, name):
     plt.title(name)
     plt.colorbar()
     plt.show()
-    return(led_flat_field)
+'''    
 
 #finds degree of correction implemented by PRNU correction.
 def calib_stats(single, corrected, prnu, croprow, cropcol, size):
@@ -74,14 +76,21 @@ def calib_stats(single, corrected, prnu, croprow, cropcol, size):
     print("Avg counts=", np.mean(crop_raw))
     print("Upon good FF correction, [2] and [4] should match well")
 
+def prep_header(fname, mfg, data_date):
+    header=fits.Header()
+    header['VERSION']=('beta', 'Version name for the Flat Field')
+    header['FNAME']=(fname, 'LED ID for SUIT')
+    header['MFG_DATE']=(mfg, 'Manufacturing date for the FITS file')
+    header['DATADATE']=(data_date,'Date of raw data recording')
+    return (header)
 
 if __name__=='__main__':
-    
     #data used from SUIT server at janmejoy@192.168.11.226:SUIT_data/level1fits_subset. 
     #Mounted by SSHFS on local machine.
     project_path= os.path.expanduser('~/Dropbox/Janmejoy_SUIT_Dropbox/flat_field/LED/onboard_PRNU_project/')
     filelist= glob.glob(project_path+"data/raw/SUT*")
-    sav= os.path.join(project_path, 'products/')
+    sav= os.path.join(project_path, 'data/processed/')
+    mfg= str(datetime.date.today()) #manufacturing date
     
     kernel_355= 11 #default is 11 for PRNU
     kernel_255= 13 # default is 13 for PRNU
@@ -111,17 +120,19 @@ if __name__=='__main__':
     croprow, cropcol= 2000, 1500
     
     prnu= flat_generator(ff_355, kernel_355, str(ff_355[0]))
-    fits.writeto(sav+name+".fits", prnu)
+    hdu=fits.PrimaryHDU(prnu, header=prep_header(name, mfg, date))
+    hdu.writeto(f'{sav}{name}.fits', overwrite=True)
     print("\n",name)
+    
     single=fits.open(ff_355[1])[0].data
     corrected= single/prnu
     calib_stats(single, corrected, prnu, croprow, cropcol, 25)
     
     name=date+'_prnu_355_aa'
     croprow, cropcol= 2000, 1500
-    
     prnu= flat_generator(aa_355, kernel_355, str(aa_355[0]))
-    fits.writeto(sav+name+".fits", prnu)
+    hdu= fits.PrimaryHDU(prnu, header=prep_header(name, mfg, date))
+    hdu.writeto(f'{sav}{name}.fits', overwrite=True)
     print("\n",name)
     single=fits.open(aa_355[1])[0].data
     corrected= single/prnu
@@ -133,7 +144,8 @@ if __name__=='__main__':
     croprow, cropcol= 3700, 2000
     
     prnu= flat_generator(aa_255, kernel_255, str(aa_255[0]))
-    fits.writeto(sav+name+".fits", prnu)
+    hdu= fits.PrimaryHDU(prnu, header=prep_header(name, mfg, date))
+    hdu.writeto(f'{sav}{name}.fits', overwrite=True)
     print("\n",name)
     single=fits.open(aa_255[1])[0].data
     corrected= single/prnu
@@ -144,12 +156,13 @@ if __name__=='__main__':
     croprow, cropcol= 3700, 2000
     
     prnu= flat_generator(ff_255, kernel_255, str(ff_255[0]))
-    fits.writeto(sav+name+".fits", prnu)
+    hdu= fits.PrimaryHDU(prnu, header=prep_header(name, mfg, date))
+    hdu.writeto(f'{sav}{name}.fits', overwrite=True)
     print("\n",name)
     single=fits.open(ff_255[1])[0].data
     corrected= single/prnu
     calib_stats(single, corrected, prnu, croprow, cropcol, 25)
-    
+''' 
     ################ test ####################
     exported= glob.glob(sav+"prnu*")
     for i in exported:
@@ -157,3 +170,4 @@ if __name__=='__main__':
         plt.imshow(fits.open(i)[0].data, vmin=0.97, vmax=1.03)
         plt.colorbar()
         plt.title(i)
+'''
