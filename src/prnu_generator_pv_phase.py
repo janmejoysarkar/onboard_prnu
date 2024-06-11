@@ -122,8 +122,8 @@ if __name__=='__main__':
     calib_stats(aa_355[1], prnu_355_aa, 2000, 1500, 25, f'{date}_prnu_355_aa')
     
     prnu_355_common= lighten([prnu_355_ff, prnu_355_aa])
-    sav_hdu= fits.PrimaryHDU(prnu_355_common, header=prnu_355_aa[0])
-    fits.writeto(f'{sav}prnu_355_common.fits', header=prep_header('prnu_355_common.fits', mfg, date))
+    sav_hdu= fits.PrimaryHDU(prnu_355_common, header= prep_header('prnu_355_common.fits', mfg, date))
+    sav_hdu.writeto(f'{sav}prnu_355_common.fits')
     
     print(f'{date}_prnu_255_ff')
     prnu_255_ff = flat_generator(ff_255, kernel_255, f'{date}_prnu_255_ff', save=True)
@@ -134,7 +134,7 @@ if __name__=='__main__':
     calib_stats(aa_255[1], prnu_255_aa, 2000, 1500, 25, f'{date}_prnu_255_aa')
     
     prnu_255_common= lighten([prnu_255_ff, prnu_255_aa])
-    sav_hdu= fits.PrimaryHDU(prnu_255_common, header=prnu_255_aa[0])
-    fits.writeto(f'{sav}prnu_255_common.fits', header=prep_header('prnu_255_common.fits', mfg, date))
+    sav_hdu= fits.PrimaryHDU(prnu_255_common, header= prep_header('prnu_255_common.fits', mfg, date))
+    sav_hdu.writeto(f'{sav}prnu_255_common.fits')
     
     
