@@ -26,7 +26,6 @@ from astropy.io import fits
 from astropy.convolution import convolve
 from astropy.convolution import Box2DKernel
 import datetime
-from concurrent.futures import ProcessPoolExecutor
 
 def add(filelist):
     data_sum=0
@@ -53,6 +52,19 @@ def flat_generator(filelist, kernel, name, save=None):
     #Based on previous study, kernel size of 11x11 px is used for boxcar blurring in 'blur' function.
     return(led_flat_field)
 
+def lighten(image_list):
+    '''
+    Lighten blend
+    image_list= List of 2D numpy arrays
+    '''
+    lighten_blend=np.zeros(np.shape(image_list[0]))
+    for image in image_list:
+        for i in range(4096):
+            for j in range(4096):
+                if image[i,j] > lighten_blend[i,j]:
+                    lighten_blend[i,j]=image[i,j]
+    return(lighten_blend)
+
 #finds degree of correction implemented by PRNU correction.
 def calib_stats(single_filename, prnu_file, croprow, cropcol, size, name):
     single= fits.open(single_filename)[0].data
@@ -72,11 +84,6 @@ def calib_stats(single_filename, prnu_file, croprow, cropcol, size, name):
     print("[4] sqrt(Raw^2-PRNU^2): ", calc_cor)
     print("Avg counts=", np.mean(crop_raw))
     print("Upon good FF correction, [2] and [4] should match well \n")
-    
-def run(files, kernel, name, croprow, cropcol, size, save):
-    print(f"\n{name}\n")
-    prnu = flat_generator(files, kernel, name, save)
-    calib_stats(files[1], prnu, croprow, cropcol, size, name)
 
 if __name__=='__main__':
     project_path= os.path.expanduser('~/Dropbox/Janmejoy_SUIT_Dropbox/flat_field/LED/onboard_PRNU_project/')
@@ -106,12 +113,28 @@ if __name__=='__main__':
             print (ledstat, fits.open(file)[0].header['FW1POS'], file)
             aa_355.append(file)
 
-    with ProcessPoolExecutor() as executor:
-        futures = [
-            executor.submit(run, ff_355, kernel_355, f'{date}_prnu_355_ff', 2000, 1500, 25, save=True),
-            executor.submit(run, aa_355, kernel_355, f'{date}_prnu_355_aa', 2000, 1500, 25, save=True),
-            executor.submit(run, ff_255, kernel_255, f'{date}_prnu_255_ff', 3700, 2000, 25, save=True),
-            executor.submit(run, aa_255, kernel_255, f'{date}_prnu_255_aa', 3700, 2000, 25, save=True)
-        ]
-        for future in futures:
-            future.result() # Wait for all futures to complete
+    print(f'{date}_prnu_355_ff')
+    prnu_355_ff = flat_generator(ff_355, kernel_355, f'{date}_prnu_355_ff', save=True)
+    calib_stats(ff_355[1], prnu_355_ff, 2000, 1500, 25, f'{date}_prnu_355_ff')
+    
+    print(f'{date}_prnu_355_aa')
+    prnu_355_aa = flat_generator(aa_355, kernel_355, f'{date}_prnu_355_aa', save=True)
+    calib_stats(aa_355[1], prnu_355_aa, 2000, 1500, 25, f'{date}_prnu_355_aa')
+    
+    prnu_355_common= lighten([prnu_355_ff, prnu_355_aa])
+    sav_hdu= fits.PrimaryHDU(prnu_355_common, header=prnu_355_aa[0])
+    fits.writeto(f'{sav}prnu_355_common.fits', header=prep_header('prnu_355_common.fits', mfg, date))
+    
+    print(f'{date}_prnu_255_ff')
+    prnu_255_ff = flat_generator(ff_255, kernel_255, f'{date}_prnu_255_ff', save=True)
+    calib_stats(ff_255[1], prnu_255_ff, 3700, 2000, 25, f'{date}_prnu_255_ff')
+    
+    print(f'{date}_prnu_255_aa')
+    prnu_255_aa = flat_generator(aa_255, kernel_255, f'{date}_prnu_255_aa', save=True)
+    calib_stats(aa_255[1], prnu_255_aa, 2000, 1500, 25, f'{date}_prnu_255_aa')
+    
+    prnu_255_common= lighten([prnu_255_ff, prnu_255_aa])
+    sav_hdu= fits.PrimaryHDU(prnu_255_common, header=prnu_255_aa[0])
+    fits.writeto(f'{sav}prnu_255_common.fits', header=prep_header('prnu_255_common.fits', mfg, date))
+    
+    
