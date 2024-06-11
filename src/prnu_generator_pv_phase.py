@@ -162,12 +162,3 @@ if __name__=='__main__':
     single=fits.open(ff_255[1])[0].data
     corrected= single/prnu
     calib_stats(single, corrected, prnu, croprow, cropcol, 25)
-''' 
-    ################ test ####################
-    exported= glob.glob(sav+"prnu*")
-    for i in exported:
-        plt.figure()
-        plt.imshow(fits.open(i)[0].data, vmin=0.97, vmax=1.03)
-        plt.colorbar()
-        plt.title(i)
-'''
