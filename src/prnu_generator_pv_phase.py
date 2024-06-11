@@ -81,7 +81,7 @@ def run(files, kernel, name, croprow, cropcol, size, save):
 if __name__=='__main__':
     project_path= os.path.expanduser('~/Dropbox/Janmejoy_SUIT_Dropbox/flat_field/LED/onboard_PRNU_project/')
     filelist= glob.glob(project_path+"data/raw/SUT*")
-    sav= os.path.join(project_path, 'data/processed/')
+    sav= os.path.join(project_path, 'products/')
     mfg= str(datetime.date.today()) #manufacturing date
     
     kernel_355= 11 #default is 11 for PRNU
