@@ -95,7 +95,7 @@ def calib_stats(single_filename, prnu_file, croprow, cropcol, size, name):
 if __name__=='__main__':
     project_path= os.path.expanduser('~/Dropbox/Janmejoy_SUIT_Dropbox/flat_field/LED/onboard_PRNU_project/')
     filelist= glob.glob(project_path+"data/raw/SUT*")
-    save= False
+    save= True
     sav= os.path.join(project_path, 'products/')
     mfg= str(datetime.date.today()) #manufacturing date
     
